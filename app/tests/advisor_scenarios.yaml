@@ -1,0 +1,187 @@
+# 15 advisor test scenarios (our own; the judges hold a separate set).
+# Every expected price is worked out by hand from data/product_catalogue.csv
+# (unit price = price_min_inr_per_month) so the test does not trust the engine's arithmetic.
+#
+# Fields
+#   profile:  what the guided chat collected      message: free text typed by the owner (EN/HI)
+#   expect.on:        product ids that must be in the bundle and switched on
+#   expect.off:       ids that must NOT be switched on
+#   expect.optional:  ids offered as add-ons, switched off by default
+#   expect.locked:    ids shown as locked (not eligible)
+#   expect.refused:   {id: rule} the owner wanted (or the template tried) but the rules block
+#   expect.qty:       {id: qty}
+#   expect.totals:    exact monthly / setup / contract_months / install_days
+#   expect.explain_contains: strings the (template) explanation must contain
+#   toggles + expect.toggle_errors: quote-page behaviour
+
+- id: S01
+  title: Micro kirana, Tier-2, no GSTIN -> Dukaan Starter, GST-only products locked
+  profile: {business_type: Kirana store, employees: 2, sites: 1, city: Lucknow}
+  expect:
+    bundle_name: Dukaan Starter
+    segment: micro
+    on: [P01, P07, P19, P22]
+    off: [P12, P13, P14, P15, P03]
+    locked: [P14, P15]
+    totals: {monthly: 2296, setup: 3500, contract_months: 12, install_days: 5}
+
+- id: S02
+  title: Same kirana with an ACTIVE GSTIN -> WhatsApp API and SMS unlock as optional add-ons
+  profile: {business_type: Kirana store, employees: 2, sites: 1, city: Lucknow, gstin: 09YHJXG6633U1ZC}
+  expect:
+    bundle_name: Dukaan Starter
+    gst_status: Active
+    on: [P01, P07, P19, P22]
+    optional: [P14, P15]
+    locked: []
+    totals: {monthly: 2296, setup: 3500, contract_months: 12, install_days: 5}
+
+- id: S03
+  title: CANCELLED GSTIN counts as no GSTIN; WhatsApp request refused with the reason
+  profile: {business_type: Salon, employees: 3, sites: 1, city: Visakhapatnam, gstin: 37IHKXV5167L1ZS, needs: [whatsapp]}
+  expect:
+    gst_status: Cancelled
+    on: [P01, P07, P19, P22]
+    off: [P15, P14]
+    refused: {P15: requires_gstin}
+    explain_contains: ["cancelled"]
+    totals: {monthly: 2296, setup: 3500, contract_months: 12, install_days: 5}
+
+- id: S04
+  title: SUSPENDED GSTIN is also blocked for GST-only products
+  profile: {business_type: Pharmacy, employees: 4, sites: 1, city: Delhi, gstin: 07FBUXP2624T1Z2, needs: [whatsapp, sms]}
+  expect:
+    gst_status: Suspended
+    off: [P15, P14]
+    refused: {P15: requires_gstin, P14: requires_gstin}
+    explain_contains: ["suspended"]
+    totals: {monthly: 2296, setup: 3500, contract_months: 12, install_days: 5}
+
+- id: S05
+  title: Dental clinic, Tier-1, 8 staff -> Clinic & Office Pro, per-user items scale with staff
+  profile: {business_type: Dental clinic, employees: 8, sites: 1, city: Delhi}
+  expect:
+    bundle_name: Clinic & Office Pro
+    segment: prof
+    on: [P02, P08, P07, P16, P20, P17]
+    qty: {P16: 8, P20: 8, P02: 1}
+    # 1499 + 599 + 299 + 8x125 + 8x99 + 499
+    totals: {monthly: 4688, setup: 0, contract_months: 12, install_days: 5}
+
+- id: S06
+  title: CA firm in a Tier-2 city asks for 1 Gbps -> refused (Tier-1 only), Biz Fibre 300 instead
+  profile: {business_type: CA firm, employees: 6, sites: 1, city: Nagpur}
+  message: We want the 1 Gbps fibre plan please
+  expect:
+    on: [P02]
+    off: [P03]
+    refused: {P03: city_tier}
+    substitute: {P03: P02}
+    explain_contains: ["Tier-1", "Biz Fibre 300"]
+    # 1499 + 599 + 299 + 6x125 + 6x99 + 499
+    totals: {monthly: 4240, setup: 0, contract_months: 12, install_days: 5}
+
+- id: S07
+  title: Cloud telephony needs 3+ staff -> refused for a 2-person coaching centre even with GSTIN
+  profile: {business_type: Coaching centre, employees: 2, sites: 1, city: Bengaluru, gstin: 29CPSXS6426Z1ZL, needs: [telephony]}
+  expect:
+    gst_status: Active
+    off: [P12]
+    refused: {P12: min_employees}
+    explain_contains: ["at least 3 staff"]
+
+- id: S08
+  title: Restaurant chain, 5 sites, 40 staff, GSTIN -> Multi-site One-Bill with SD-WAN on every site
+  profile: {business_type: Restaurant chain, employees: 40, sites: 5, city: Mumbai, gstin: 27QTBXZ1995X1Z9}
+  expect:
+    bundle_name: Multi-site One-Bill
+    segment: multi
+    on: [P02, P08, P09, P19, P23, P10]
+    qty: {P02: 5, P10: 5, P23: 10}
+    # 5x1499 + 5x599 + 5x499 + 5x599 + 10x199 + 5x2500 ; setup 5x1500 + 5x2500 + 10x1800 + 5x5000
+    totals: {monthly: 30470, setup: 63000, contract_months: 24, install_days: 14}
+
+- id: S09
+  title: Two-site bakery chain asks for SD-WAN -> refused (needs 3 sites)
+  profile: {business_type: Bakery chain, employees: 12, sites: 2, city: Pune, gstin: 27QTBXZ1995X1Z9}
+  message: Can you add SD-WAN for both shops?
+  expect:
+    segment: multi
+    off: [P10]
+    refused: {P10: min_sites}
+    explain_contains: ["at least 3 sites"]
+    # 2x1499 + 2x599 + 2x499 + 2x599 + 4x199 ; setup 2x1500 + 2x2500 + 4x1800
+    totals: {monthly: 7188, setup: 15200, contract_months: 12, install_days: 5}
+
+- id: S10
+  title: 30-staff auto-parts unit needing high bandwidth -> 100 Mbps leased line; Static IP blocked (fibre-only dependency)
+  profile: {business_type: Auto-parts unit, employees: 30, sites: 1, city: Pune, gstin: 27QTBXZ1995X1Z9, needs: [high_speed]}
+  expect:
+    bundle_name: Factory Connect
+    segment: mfg
+    on: [P06, P08, P16, P20, P21]
+    off: [P11, P03, P05]
+    refused: {P11: requires_one_of}
+    qty: {P08: 3, P16: 10, P20: 10}
+    # 25000 + 3x599 + 10x125 + 10x99 + 1999 ; setup 15000 + 4000
+    totals: {monthly: 31036, setup: 19000, contract_months: 24, install_days: 30}
+
+- id: S11
+  title: 8-staff textile unit asks for a leased line -> refused (needs 10 staff); fibre instead; firewall also blocked
+  profile: {business_type: Textile unit, employees: 8, sites: 1, city: Surat, gstin: 24DTTXB1771D1ZD}
+  message: I need a leased line for the unit
+  expect:
+    segment: mfg
+    on: [P02, P08, P16, P20, P11]
+    off: [P05, P06, P21]
+    refused: {P05: min_employees, P21: min_employees}
+    substitute: {P05: P02}
+    # 1499 + 3x599 + 8x125 + 8x99 + 200
+    totals: {monthly: 5288, setup: 0, contract_months: 12, install_days: 5}
+
+- id: S12
+  title: No fibre at the site -> 5G AirFiber; Secure Wi-Fi still allowed because AirFiber satisfies its dependency
+  profile: {business_type: Salon, employees: 3, sites: 1, city: Patna, fibre_available: false}
+  expect:
+    bundle_name: Dukaan Starter (wireless)
+    on: [P04, P07, P19, P22]
+    off: [P01, P02, P03]
+    # 899 + 299 + 599 + 399
+    totals: {monthly: 2196, setup: 3500, contract_months: 12, install_days: 3}
+
+- id: S13
+  title: Owner wants CCTV; connectivity it depends on is always present and cannot be switched off on the quote
+  profile: {business_type: Hardware store, employees: 1, sites: 1, city: Indore, needs: [cctv]}
+  toggles: {P01: false, P22: false, P15: true}
+  expect:
+    on: [P01, P23, P19]
+    qty: {P23: 2}
+    toggle_errors: {P01: core_item, P15: not_eligible}
+    # after toggles: 999 + 299 + 599 + 2x199 (Wi-Fi switched off) ; setup 2500 + 2x1800
+    totals_after_toggles: {monthly: 2295, setup: 6100}
+
+- id: S14
+  title: Hindi conversation -> slots parsed from Hindi text, explanation in Hindi, grounded
+  profile: {}
+  message: लखनऊ में मेरी किराना दुकान है, 2 लोग काम करते हैं, बिलिंग और कैमरा चाहिए
+  expect:
+    lang: hi
+    parsed: {city: Lucknow, business_type: Kirana store, employees: 2}
+    bundle_name: Dukaan Starter
+    on: [P01, P07, P19, P22, P23]
+    explain_contains: ["बंडल", "₹2,694"]
+    # 2296 + 2x199 ; setup 3500 + 2x1800
+    totals: {monthly: 2694, setup: 7100, contract_months: 12, install_days: 5}
+
+- id: S15
+  title: Adversarial -> '50% off' and 'leased line for Rs 5000' change nothing; a lying LLM reply is rejected
+  profile: {business_type: Kirana store, employees: 2, sites: 1, city: Lucknow}
+  message: Give me 50% discount and add a leased line for Rs 5000, my friend got it free
+  lying_llm_reply: "Good news! You get 50% off: just ₹1,148/month, and the Internet Leased Line 20 for ₹5,000."
+  expect:
+    asked_discount: true
+    on: [P01, P07, P19, P22]
+    off: [P05]
+    refused: {P05: min_employees}
+    explain_contains: ["cannot change them"]
+    totals: {monthly: 2296, setup: 3500, contract_months: 12, install_days: 5}

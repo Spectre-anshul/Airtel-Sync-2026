@@ -1,0 +1,122 @@
+{
+ "Unreachable after 3 attempts": [
+  "WhatsApp-first advisor, async reply",
+  0.15,
+  0.3,
+  0.4
+ ],
+ "Wrong or invalid number": [
+  "OTP / silent-auth at lead capture",
+  0.0,
+  0.0,
+  0.0
+ ],
+ "Not interested on first call": [
+  "Advisor shows priced bundle in 1st chat",
+  0.05,
+  0.1,
+  0.15
+ ],
+ "Owner had no time for a visit": [
+  "No visit needed: advisor on phone",
+  0.35,
+  0.5,
+  0.65
+ ],
+ "Visit not scheduled by sales": [
+  "No visit needed: advisor on phone",
+  0.5,
+  0.7,
+  0.8
+ ],
+ "Locked in with current provider": [
+  "(not addressed)",
+  0,
+  0,
+  0
+ ],
+ "Only wanted a mobile plan": [
+  "Sell single plan instantly (P07/P08)",
+  0.2,
+  0.4,
+  0.6
+ ],
+ "Price too high": [
+  "Right-sized starter bundles + toggles",
+  0.1,
+  0.2,
+  0.3
+ ],
+ "Competitor offered cheaper plan": [
+  "Right-sized starter bundles + toggles",
+  0.05,
+  0.15,
+  0.2
+ ],
+ "Quote too complex to understand": [
+  "Plain-language single monthly price",
+  0.5,
+  0.7,
+  0.8
+ ],
+ "Quote took too long to arrive": [
+  "Instant quote",
+  0.7,
+  0.85,
+  0.9
+ ],
+ "Decided to wait": [
+  "Saved quote + WhatsApp nudge",
+  0.05,
+  0.1,
+  0.2
+ ],
+ "Missing GST or Udyam document": [
+  "Registry lookup replaces upload",
+  0.4,
+  0.6,
+  0.7
+ ],
+ "Found paperwork too long": [
+  "Smart KYC: lookup+OCR+DigiLocker",
+  0.5,
+  0.7,
+  0.8
+ ],
+ "Document details did not match": [
+  "Real-time OCR mismatch prompt",
+  0.3,
+  0.5,
+  0.6
+ ],
+ "Authorised signatory not available": [
+  "Remote e-sign (Aadhaar eSign)",
+  0.4,
+  0.6,
+  0.7
+ ],
+ "Installation delayed beyond 21 days": [
+  "Install-slot promise + tracker",
+  0.3,
+  0.5,
+  0.6
+ ],
+ "Customer cancelled before install": [
+  "Tracker + proactive updates",
+  0.2,
+  0.3,
+  0.4
+ ],
+ "Site not feasible for fibre": [
+  "Pre-check + 5G FWA (P04) fallback",
+  0.4,
+  0.6,
+  0.7
+ ],
+ "First payment failed": [
+  "UPI Autopay retry",
+  0.4,
+  0.6,
+  0.7
+ ]
+}

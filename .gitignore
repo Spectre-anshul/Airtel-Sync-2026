@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+app/runtime/
+~$*
+
+# not for the public repo
+reference/*.pdf
+deck/*.zip
